@@ -99,6 +99,10 @@
         .search-input { padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 13px; width: 220px; margin-bottom: 12px; }
 
         .dashboard-footer { text-align: center; padding: 16px; font-size: 12px; color: var(--text-secondary); }
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--text-secondary); }
+        .pagination button { padding: 5px 12px; border: 1px solid #dee2e6; border-radius: 4px; background: white; cursor: pointer; font-size: 12px; }
+        .pagination button:hover:not(:disabled) { background: #f0f0f0; }
+        .pagination button:disabled { opacity: 0.4; cursor: default; }
 
         @media (max-width: 768px) {
             .dashboard-header { flex-direction: column; align-items: flex-start; }
@@ -189,6 +193,7 @@
             <th class="text-right">CPC</th><th class="text-right">CTR</th><th class="text-right">Meta Leads</th>
             <th class="text-right">SF Leads</th><th class="text-right">True CPL</th><th class="text-right">Conv %</th>
         </tr></thead><tbody id="campaignBody"></tbody></table></div>
+        <div class="pagination" id="campaignPagination"></div>
     </section>
 
     <section class="section">
@@ -198,6 +203,7 @@
             <th>Ad Name</th><th>Campaign</th><th class="text-right">Spend</th><th class="text-right">Clicks</th>
             <th class="text-right">Meta Leads</th><th class="text-right">SF Leads</th><th class="text-right">True CPL</th>
         </tr></thead><tbody id="creativeBody"></tbody></table></div>
+        <div class="pagination" id="creativePagination"></div>
     </section>
 
     <section class="section">
@@ -398,25 +404,44 @@ class Dashboard {
         this.renderSummary(this.getRows());
     }
 
-    renderCampaigns() {
+    renderCampaigns(page=0) {
         const q = (document.getElementById('campaignSearch').value || '').toLowerCase();
         const data = this.raw.campaigns.filter(r => !q || r.campaign.toLowerCase().includes(q));
-        document.getElementById('campaignBody').innerHTML = data.map(r => `<tr>
+        const ps = 10, start = page*ps, end = Math.min(start+ps, data.length);
+        const pageData = data.slice(start, end);
+        document.getElementById('campaignBody').innerHTML = pageData.map(r => `<tr>
             <td>${r.campaign}</td><td class="text-right">${fmt$(r.spend)}</td><td class="text-right">${fmtN(r.clicks)}</td>
             <td class="text-right">${fmt$(r.cpc)}</td><td class="text-right">${fmtPct(r.ctr)}</td>
             <td class="text-right">${fmtN(r.meta_leads)}</td><td class="text-right">${fmtN(r.sf_leads)}</td>
             <td class="text-right ${cplClass(r.true_cpl)}">${fmt$(r.true_cpl)}</td>
             <td class="text-right">${fmtPct(r.conv_rate)}</td></tr>`).join('');
+        this._paginate('campaignPagination', data.length, ps, page, 'renderCampaigns');
     }
 
-    renderCreatives() {
+    renderCreatives(page=0) {
         const q = (document.getElementById('creativeSearch').value || '').toLowerCase();
         const data = this.raw.creatives.filter(r => !q || r.ad_name.toLowerCase().includes(q) || r.campaign.toLowerCase().includes(q));
-        document.getElementById('creativeBody').innerHTML = data.map(r => `<tr>
+        const ps = 15, start = page*ps, end = Math.min(start+ps, data.length);
+        const pageData = data.slice(start, end);
+        document.getElementById('creativeBody').innerHTML = pageData.map(r => `<tr>
             <td>${r.ad_name}</td><td>${r.campaign}</td><td class="text-right">${fmt$(r.spend)}</td>
             <td class="text-right">${fmtN(r.clicks)}</td><td class="text-right">${fmtN(r.meta_leads)}</td>
             <td class="text-right">${fmtN(r.sf_leads)}</td>
             <td class="text-right ${cplClass(r.true_cpl)}">${fmt$(r.true_cpl)}</td></tr>`).join('');
+        this._paginate('creativePagination', data.length, ps, page, 'renderCreatives');
+    }
+
+    _paginate(containerId, total, pageSize, currentPage, fnName) {
+        const pages = Math.ceil(total/pageSize);
+        if (pages <= 1) { document.getElementById(containerId).innerHTML = ''; return; }
+        const start = currentPage*pageSize+1, end = Math.min((currentPage+1)*pageSize, total);
+        document.getElementById(containerId).innerHTML = `
+            <span>Showing ${start}-${end} of ${total}</span>
+            <div>
+                <button ${currentPage===0?'disabled':''} onclick="dashboard.${fnName}(${currentPage-1})">Prev</button>
+                <span style="margin:0 8px;">Page ${currentPage+1} of ${pages}</span>
+                <button ${currentPage>=pages-1?'disabled':''} onclick="dashboard.${fnName}(${currentPage+1})">Next</button>
+            </div>`;
     }
 
     renderReconciliation(rows) {
