@@ -99,10 +99,9 @@
         .search-input { padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 13px; width: 220px; margin-bottom: 12px; }
 
         .dashboard-footer { text-align: center; padding: 16px; font-size: 12px; color: var(--text-secondary); }
-        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--text-secondary); }
-        .pagination button { padding: 5px 12px; border: 1px solid #dee2e6; border-radius: 4px; background: white; cursor: pointer; font-size: 12px; }
-        .pagination button:hover:not(:disabled) { background: #f0f0f0; }
-        .pagination button:disabled { opacity: 0.4; cursor: default; }
+        .expand-toggle { text-align: center; padding: 8px 0; }
+        .expand-toggle button { padding: 6px 20px; border: 1px solid #dee2e6; border-radius: 4px; background: white; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--color-1); }
+        .expand-toggle button:hover { background: #f0f0f4; }
 
         @media (max-width: 768px) {
             .dashboard-header { flex-direction: column; align-items: flex-start; }
@@ -161,14 +160,32 @@
         <div class="kpi-card"><div class="kpi-label">Coach Match Rate</div><div class="kpi-value" id="kpi-coach" style="color:var(--positive)"></div><div class="kpi-sub">Ever Matched to Coach</div></div>
     </section>
 
+    <!-- ALL CHARTS FIRST -->
     <section class="chart-row">
         <div class="chart-container"><h3>Spend & True CPL</h3><canvas id="chartSpendCPL"></canvas></div>
         <div class="chart-container"><h3>Meta vs Salesforce Leads</h3><canvas id="chartLeadGap"></canvas></div>
     </section>
-    <section class="chart-row" style="grid-template-columns:1fr;">
+    <section class="chart-row">
         <div class="chart-container"><h3>Conversion Rate (Clicks → SF Leads)</h3><canvas id="chartConvRate" style="max-height:220px;"></canvas></div>
+        <div class="chart-container">
+            <h3>Lead Reconciliation (Meta vs Salesforce)</h3>
+            <p class="section-note">Meta over-reports leads due to CAPI deduplication issues.</p>
+            <canvas id="chartReconciliation" style="max-height:250px;"></canvas>
+        </div>
+    </section>
+    <section class="two-col">
+        <div class="chart-container">
+            <h3>Geographic Breakdown</h3>
+            <canvas id="chartCountry" style="max-height:300px;"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Lead Status Funnel</h3>
+            <div id="funnelContainer" style="padding-top:8px;"></div>
+            <canvas id="chartFunnel" style="max-height:220px;margin-top:12px;"></canvas>
+        </div>
     </section>
 
+    <!-- ALL TABLES BELOW -->
     <section class="section">
         <h3>Period Summary</h3>
         <div class="table-responsive"><table class="data-table" id="summaryTable"><thead><tr>
@@ -183,6 +200,7 @@
             <th onclick="dashboard.sortSummary('true_cpl')" class="text-right">True CPL</th>
             <th onclick="dashboard.sortSummary('conv_rate')" class="text-right">Conv %</th>
         </tr></thead><tbody id="summaryBody"></tbody><tfoot id="summaryFoot"></tfoot></table></div>
+        <div class="expand-toggle" id="summaryExpand"></div>
     </section>
 
     <section class="section">
@@ -193,7 +211,7 @@
             <th class="text-right">CPC</th><th class="text-right">CTR</th><th class="text-right">Meta Leads</th>
             <th class="text-right">SF Leads</th><th class="text-right">True CPL</th><th class="text-right">Conv %</th>
         </tr></thead><tbody id="campaignBody"></tbody></table></div>
-        <div class="pagination" id="campaignPagination"></div>
+        <div class="expand-toggle" id="campaignExpand"></div>
     </section>
 
     <section class="section">
@@ -203,31 +221,18 @@
             <th>Ad Name</th><th>Campaign</th><th class="text-right">Spend</th><th class="text-right">Clicks</th>
             <th class="text-right">Meta Leads</th><th class="text-right">SF Leads</th><th class="text-right">True CPL</th>
         </tr></thead><tbody id="creativeBody"></tbody></table></div>
-        <div class="pagination" id="creativePagination"></div>
+        <div class="expand-toggle" id="creativeExpand"></div>
     </section>
 
     <section class="section">
-        <h3>Lead Reconciliation (Meta vs Salesforce)</h3>
-        <p class="section-note">Meta over-reports leads due to CAPI deduplication issues. True lead count comes from Salesforce Registration records.</p>
-        <canvas id="chartReconciliation" style="max-height:280px;"></canvas>
-    </section>
-
-    <section class="two-col">
-        <div class="section">
-            <h3>Geographic Breakdown</h3>
-            <canvas id="chartCountry" style="max-height:320px;"></canvas>
-            <div class="table-responsive" style="margin-top:16px;">
-                <table class="data-table" id="countryTable"><thead><tr>
-                    <th>Country</th><th class="text-right">Spend</th><th class="text-right">Clicks</th>
-                    <th class="text-right">Meta Leads</th><th class="text-right">CPC</th><th class="text-right">Meta CPL</th>
-                </tr></thead><tbody id="countryBody"></tbody></table>
-            </div>
+        <h3>Geographic Detail</h3>
+        <div class="table-responsive">
+            <table class="data-table" id="countryTable"><thead><tr>
+                <th>Country</th><th class="text-right">Spend</th><th class="text-right">Clicks</th>
+                <th class="text-right">Meta Leads</th><th class="text-right">CPC</th><th class="text-right">Meta CPL</th>
+            </tr></thead><tbody id="countryBody"></tbody></table>
         </div>
-        <div class="section">
-            <h3>Lead Status Funnel</h3>
-            <div id="funnelContainer" style="padding-top:16px;"></div>
-            <canvas id="chartFunnel" style="max-height:250px;margin-top:20px;"></canvas>
-        </div>
+        <div class="expand-toggle" id="countryExpand"></div>
     </section>
 
     <footer class="dashboard-footer">
@@ -250,6 +255,7 @@ class Dashboard {
         this.view = 'W';
         this.sortCol = 'period'; this.sortDir = 'desc';
         this.charts = {};
+        this.expanded = { summary: false, campaign: false, creative: false, country: false };
         this.init();
     }
 
@@ -377,8 +383,10 @@ class Dashboard {
             const cmp = av<bv?-1:av>bv?1:0;
             return this.sortDir==='asc'?cmp:-cmp;
         });
+        const limit = 10;
+        const show = this.expanded.summary ? sorted : sorted.slice(0, limit);
         const tbody = document.getElementById('summaryBody');
-        tbody.innerHTML = sorted.map(r => `<tr>
+        tbody.innerHTML = show.map(r => `<tr>
             <td>${r.period}</td><td class="text-right">${fmt$(r.spend)}</td><td class="text-right">${fmtN(r.clicks)}</td>
             <td class="text-right">${fmt$(r.cpc)}</td><td class="text-right">${fmtPct(r.ctr)}</td>
             <td class="text-right">${fmtN(r.meta_leads)}</td><td class="text-right">${fmtN(r.sf_leads)}</td>
@@ -396,6 +404,7 @@ class Dashboard {
             <td class="text-right">${fmtN(tg)}</td>
             <td class="text-right ${cplClass(tcpl)}">${fmt$(tcpl)}</td>
             <td class="text-right">${fmtPct(tconv)}</td></tr>`;
+        this._expandBtn('summaryExpand', sorted.length, limit, 'summary', () => this.renderSummary(this.getRows()));
     }
 
     sortSummary(col) {
@@ -404,44 +413,48 @@ class Dashboard {
         this.renderSummary(this.getRows());
     }
 
-    renderCampaigns(page=0) {
+    renderCampaigns() {
         const q = (document.getElementById('campaignSearch').value || '').toLowerCase();
         const data = this.raw.campaigns.filter(r => !q || r.campaign.toLowerCase().includes(q));
-        const ps = 10, start = page*ps, end = Math.min(start+ps, data.length);
-        const pageData = data.slice(start, end);
-        document.getElementById('campaignBody').innerHTML = pageData.map(r => `<tr>
+        const limit = 10;
+        const show = this.expanded.campaign ? data : data.slice(0, limit);
+        document.getElementById('campaignBody').innerHTML = show.map(r => `<tr>
             <td>${r.campaign}</td><td class="text-right">${fmt$(r.spend)}</td><td class="text-right">${fmtN(r.clicks)}</td>
             <td class="text-right">${fmt$(r.cpc)}</td><td class="text-right">${fmtPct(r.ctr)}</td>
             <td class="text-right">${fmtN(r.meta_leads)}</td><td class="text-right">${fmtN(r.sf_leads)}</td>
             <td class="text-right ${cplClass(r.true_cpl)}">${fmt$(r.true_cpl)}</td>
             <td class="text-right">${fmtPct(r.conv_rate)}</td></tr>`).join('');
-        this._paginate('campaignPagination', data.length, ps, page, 'renderCampaigns');
+        this._expandBtn('campaignExpand', data.length, limit, 'campaign', () => this.renderCampaigns());
     }
 
-    renderCreatives(page=0) {
+    renderCreatives() {
         const q = (document.getElementById('creativeSearch').value || '').toLowerCase();
         const data = this.raw.creatives.filter(r => !q || r.ad_name.toLowerCase().includes(q) || r.campaign.toLowerCase().includes(q));
-        const ps = 15, start = page*ps, end = Math.min(start+ps, data.length);
-        const pageData = data.slice(start, end);
-        document.getElementById('creativeBody').innerHTML = pageData.map(r => `<tr>
+        const limit = 10;
+        const show = this.expanded.creative ? data : data.slice(0, limit);
+        document.getElementById('creativeBody').innerHTML = show.map(r => `<tr>
             <td>${r.ad_name}</td><td>${r.campaign}</td><td class="text-right">${fmt$(r.spend)}</td>
             <td class="text-right">${fmtN(r.clicks)}</td><td class="text-right">${fmtN(r.meta_leads)}</td>
             <td class="text-right">${fmtN(r.sf_leads)}</td>
             <td class="text-right ${cplClass(r.true_cpl)}">${fmt$(r.true_cpl)}</td></tr>`).join('');
-        this._paginate('creativePagination', data.length, ps, page, 'renderCreatives');
+        this._expandBtn('creativeExpand', data.length, limit, 'creative', () => this.renderCreatives());
     }
 
-    _paginate(containerId, total, pageSize, currentPage, fnName) {
-        const pages = Math.ceil(total/pageSize);
-        if (pages <= 1) { document.getElementById(containerId).innerHTML = ''; return; }
-        const start = currentPage*pageSize+1, end = Math.min((currentPage+1)*pageSize, total);
-        document.getElementById(containerId).innerHTML = `
-            <span>Showing ${start}-${end} of ${total}</span>
-            <div>
-                <button ${currentPage===0?'disabled':''} onclick="dashboard.${fnName}(${currentPage-1})">Prev</button>
-                <span style="margin:0 8px;">Page ${currentPage+1} of ${pages}</span>
-                <button ${currentPage>=pages-1?'disabled':''} onclick="dashboard.${fnName}(${currentPage+1})">Next</button>
-            </div>`;
+    _expandBtn(containerId, total, limit, key, renderFn) {
+        const el = document.getElementById(containerId);
+        if (total <= limit) { el.innerHTML = ''; return; }
+        if (this.expanded[key]) {
+            el.innerHTML = `<button onclick="dashboard.expanded.${key}=false;dashboard._rerender('${key}')">Show less (${limit} rows)</button>`;
+        } else {
+            el.innerHTML = `<button onclick="dashboard.expanded.${key}=true;dashboard._rerender('${key}')">Show all ${total} rows</button>`;
+        }
+    }
+
+    _rerender(key) {
+        if (key === 'summary') this.renderSummary(this.getRows());
+        else if (key === 'campaign') this.renderCampaigns();
+        else if (key === 'creative') this.renderCreatives();
+        else if (key === 'country') this.renderCountry();
     }
 
     renderReconciliation(rows) {
@@ -463,7 +476,7 @@ class Dashboard {
     }
 
     renderCountry() {
-        const countries = this.raw.countries.filter(c => c.spend > 10).slice(0, 15);
+        const countries = this.raw.countries.filter(c => c.spend > 10);
         if (this.charts.country) this.charts.country.destroy();
         const top10 = countries.slice(0, 10);
         this.charts.country = new Chart(document.getElementById('chartCountry'), {
@@ -471,10 +484,13 @@ class Dashboard {
             data: { labels:top10.map(c=>c.country), datasets:[{label:'Spend',data:top10.map(c=>c.spend),backgroundColor:COLORS.map(c=>c+'CC'),borderRadius:4}]},
             options: { responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt$(ctx.parsed.x)}}}, scales:{x:{grid:{color:'#f0f0f0'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}},y:{grid:{display:false}}} }
         });
-        document.getElementById('countryBody').innerHTML = countries.map(r => `<tr>
+        const limit = 10;
+        const show = this.expanded.country ? countries : countries.slice(0, limit);
+        document.getElementById('countryBody').innerHTML = show.map(r => `<tr>
             <td>${r.country}</td><td class="text-right">${fmt$(r.spend)}</td><td class="text-right">${fmtN(r.clicks)}</td>
             <td class="text-right">${fmtN(r.meta_leads)}</td><td class="text-right">${fmt$(r.cpc)}</td>
             <td class="text-right ${cplClass(r.meta_cpl)}">${fmt$(r.meta_cpl)}</td></tr>`).join('');
+        this._expandBtn('countryExpand', countries.length, limit, 'country', () => this.renderCountry());
     }
 
     renderFunnel() {
